@@ -34,3 +34,5 @@ add_executable(regress_test regress/regress_test_main.cpp regress/regress_test.c
 # concurrency test
 add_executable(concurrency_test concurrency/concurrency_test_main.cpp concurrency/concurrency_test.cpp regress/regress_test.cpp)
 
+set(CMAKE_CXX_STANDARD 17)  # 设置 C++ 标准版本
+set(CMAKE_CXX_FLAGS "-Wall -Wextra")  # 添加编译器标志，如 -Wall 和 -Wextra
