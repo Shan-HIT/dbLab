@@ -264,6 +264,7 @@ bool IxIndexHandle::get_value(const char *key, std::vector<Rid> *result, Transac
     // 2. 在叶子节点中查找目标key值的位置，并读取key对应的rid
     // 3. 把rid存入result参数中
     // 提示：使用完buffer_pool提供的page之后，记得unpin page；记得处理并发的上锁
+    std::scoped_lock lock{root_latch_};
     auto leaf = find_leaf_page(key, Operation::FIND, transaction);
     Rid **rid = new Rid*();
     if(leaf.first->leaf_lookup(key, rid)){
@@ -384,6 +385,7 @@ page_id_t IxIndexHandle::insert_entry(const char *key, const Rid &value, Transac
     // 2. 在该叶子节点中插入键值对
     // 3. 如果结点已满，分裂结点，并把新结点的相关信息插入父节点
     // 提示：记得unpin page；若当前叶子节点是最右叶子节点，则需要更新file_hdr_.last_leaf；记得处理并发的上锁
+    std::scoped_lock lock{root_latch_};
     auto leaf = find_leaf_page(key, Operation::INSERT, transaction);
     int nums = leaf.first->insert(key, value);
     int idx = leaf.first->lower_bound(key);
@@ -412,6 +414,7 @@ bool IxIndexHandle::delete_entry(const char *key, Transaction *transaction) {
     // 2. 在该叶子结点中删除键值对
     // 3. 如果删除成功需要调用CoalesceOrRedistribute来进行合并或重分配操作，并根据函数返回结果判断是否有结点需要删除
     // 4. 如果需要并发，并且需要删除叶子结点，则需要在事务的delete_page_set中添加删除结点的对应页面；记得处理并发的上锁
+     std::scoped_lock lock{root_latch_};
     auto leaf = find_leaf_page(key, Operation::DELETE, transaction);
     int nums_before_delete = leaf.first->page_hdr->num_key;
     int nums_after_delete = leaf.first->remove(key);
@@ -577,7 +580,7 @@ bool IxIndexHandle::coalesce(IxNodeHandle **neighbor_node, IxNodeHandle **node, 
     else
         (*parent)->erase_pair(index+1);
     file_hdr_->num_pages_--;
-    return coalesce_or_redistribute(*parent, transaction);
+    return coalesce_or_redistribute(*parent, transaction, root_is_latched);
 }
 
 /**
