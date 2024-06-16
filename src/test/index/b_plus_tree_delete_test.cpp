@@ -174,7 +174,8 @@ class BPlusTreeTests : public ::testing::Test {
      * @param outf dot文件名
      */
     void Draw(BufferPoolManager *bpm, const std::string &outf) {
-        std::ofstream out(outf);
+        std::string str1 =  "/rucbase-lab/build/output_delete/" + outf;
+        std::ofstream out(str1);
         out << "digraph G {" << std::endl;
         
         IxNodeHandle *node = ih_->fetch_node(ih_->file_hdr_->root_page_);
@@ -184,7 +185,7 @@ class BPlusTreeTests : public ::testing::Test {
 
         // 由dot文件生成png文件
         std::string prefix = outf;
-        prefix.replace(outf.rfind(".dot"), 4, "");
+        prefix.replace(str1.rfind(".dot"), 4, "");
         std::string png_name = prefix + ".png";
         std::string cmd = "dot -Tpng " + outf + " -o " + png_name;
         system(cmd.c_str());
@@ -357,7 +358,7 @@ TEST_F(BPlusTreeTests, InsertAndDeleteTest1) {
         bool delete_ret = ih_->delete_entry(index_key, txn_.get());  // 调用Delete
         ASSERT_EQ(delete_ret, true);
 
-        // Draw(buffer_pool_manager_.get(), "InsertAndDeleteTest1_delete" + std::to_string(key) + ".dot");
+        //Draw(buffer_pool_manager_.get(), "InsertAndDeleteTest1_delete" + std::to_string(key) + ".dot");
     }
 
     // scan keys by Ixscan
@@ -404,7 +405,7 @@ TEST_F(BPlusTreeTests, InsertAndDeleteTest2) {
         bool insert_ret = ih_->insert_entry(index_key, rid, txn_.get());  // 调用Insert
         ASSERT_EQ(insert_ret, true);
     }
-    // Draw(buffer_pool_manager_.get(), "insert10.dot");
+        Draw(buffer_pool_manager_.get(), "insert10.dot");
 
     // scan keys by GetValue()
     std::vector<Rid> rids;
@@ -425,7 +426,7 @@ TEST_F(BPlusTreeTests, InsertAndDeleteTest2) {
         bool delete_ret = ih_->delete_entry(index_key, txn_.get());  // 调用Delete
         ASSERT_EQ(delete_ret, true);
 
-        // Draw(buffer_pool_manager_.get(), "InsertAndDeleteTest2_delete" + std::to_string(key) + ".dot");
+        //Draw(buffer_pool_manager_.get(), "InsertAndDeleteTest2_delete" + std::to_string(key) + ".dot");
     }
 }
 

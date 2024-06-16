@@ -89,6 +89,8 @@ class DiskManager {
 
     static constexpr int MAX_FD = 8192;
 
+    int get_fd2path(const std::string &path){return path2fd_[path];}//自己增加的辅助函数，用于sm_manager
+
    private:
     // 文件打开列表，用于记录文件是否被打开
     std::unordered_map<std::string, int> path2fd_;  //<Page文件磁盘路径,Page fd>哈希表

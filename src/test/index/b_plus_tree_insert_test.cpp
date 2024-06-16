@@ -174,21 +174,24 @@ class BPlusTreeTests : public ::testing::Test {
      * @param outf dot文件名
      */
     void Draw(BufferPoolManager *bpm, const std::string &outf) {
-        std::ofstream out(outf);
+        std::string str1 =  "/rucbase-lab/build/output/" + outf;
+        std::ofstream out(str1);
         out << "digraph G {" << std::endl;
         
         IxNodeHandle *node = ih_->fetch_node(ih_->file_hdr_->root_page_);
         ToGraph(ih_.get(), node, bpm, out);
         out << "}" << std::endl;
         out.close();
-
+        // std::cout<<"sssssssss"<<std::endl;
         // 由dot文件生成png文件
-        std::string prefix = outf;
-        prefix.replace(outf.rfind(".dot"), 4, "");
+        std::string prefix = str1;
+        // std::cout<<str1<<std::endl;
+        // std::cout<<prefix<<std::endl;
+        prefix.replace(str1.rfind(".dot"), 4, "");
         std::string png_name = prefix + ".png";
-        std::string cmd = "dot -Tpng " + outf + " -o " + png_name;
+        std::string cmd = "dot -Tpng " + str1 + " -o " + png_name;
         system(cmd.c_str());
-
+        // std::cout<<"***********"<<std::endl;
         // printf("Generate picture: build/%s/%s\n", TEST_DB_NAME.c_str(), png_name.c_str());
         printf("Generate picture: %s\n", png_name.c_str());
     }
@@ -331,8 +334,7 @@ TEST_F(BPlusTreeTests, InsertTest) {
         index_key = (const char *)&key;
         bool insert_ret = ih_->insert_entry(index_key, rid, txn_.get());  // 调用Insert
         ASSERT_EQ(insert_ret, true);
-
-        // Draw(buffer_pool_manager_.get(), "insert" + std::to_string(key) + ".dot");
+        Draw(buffer_pool_manager_.get(), "insert" + std::to_string(key) + ".dot");
     }
 
     std::vector<Rid> rids;
