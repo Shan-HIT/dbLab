@@ -528,11 +528,13 @@ void IxIndexHandle::redistribute(IxNodeHandle *neighbor_node, IxNodeHandle *node
         node->insert_pair(node->page_hdr->num_key, neighbor_node->get_key(0), *neighbor_node->get_rid(0));
         neighbor_node->erase_pair(0);
         parent->set_key(index+1, neighbor_node->get_key(0));
+        maintain_child(node, node->get_size()-1);
     } else{
         int neighbor_position = neighbor_node->get_size() - 1;
         node->insert_pair(0, neighbor_node->get_key(neighbor_position), *neighbor_node->get_rid(neighbor_position));
         neighbor_node->erase_pair(neighbor_position);
         parent->set_key(index, neighbor_node->get_key(neighbor_position));
+        maintain_child(node, 0);
     }
 }
 

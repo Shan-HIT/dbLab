@@ -334,7 +334,7 @@ TEST_F(BPlusTreeTests, InsertAndDeleteTest1) {
         bool insert_ret = ih_->insert_entry(index_key, rid, txn_.get());  // 调用Insert
         ASSERT_EQ(insert_ret, true);
     }
-    Draw(buffer_pool_manager_.get(), "insert10.dot");
+    // Draw(buffer_pool_manager_.get(), "insert10.dot");
 
     // scan keys by GetValue()
     std::vector<Rid> rids;
@@ -405,7 +405,7 @@ TEST_F(BPlusTreeTests, InsertAndDeleteTest2) {
         bool insert_ret = ih_->insert_entry(index_key, rid, txn_.get());  // 调用Insert
         ASSERT_EQ(insert_ret, true);
     }
-        Draw(buffer_pool_manager_.get(), "insert10.dot");
+        // Draw(buffer_pool_manager_.get(), "insert10.dot");
 
     // scan keys by GetValue()
     std::vector<Rid> rids;
