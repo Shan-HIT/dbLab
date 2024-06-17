@@ -174,7 +174,8 @@ class BPlusTreeTests : public ::testing::Test {
      * @param outf dot文件名
      */
     void Draw(BufferPoolManager *bpm, const std::string &outf) {
-        std::string str1 =  "/rucbase-lab/build/output/" + outf;
+        const std::string path ="/home/shan/Desktop/dbLab/notes/insert/";
+        std::string str1 =  path + outf;
         std::ofstream out(str1);
         out << "digraph G {" << std::endl;
         
@@ -182,16 +183,14 @@ class BPlusTreeTests : public ::testing::Test {
         ToGraph(ih_.get(), node, bpm, out);
         out << "}" << std::endl;
         out.close();
-        // std::cout<<"sssssssss"<<std::endl;
+
         // 由dot文件生成png文件
         std::string prefix = str1;
-        // std::cout<<str1<<std::endl;
-        // std::cout<<prefix<<std::endl;
+
         prefix.replace(str1.rfind(".dot"), 4, "");
         std::string png_name = prefix + ".png";
         std::string cmd = "dot -Tpng " + str1 + " -o " + png_name;
         system(cmd.c_str());
-        // std::cout<<"***********"<<std::endl;
         // printf("Generate picture: build/%s/%s\n", TEST_DB_NAME.c_str(), png_name.c_str());
         printf("Generate picture: %s\n", png_name.c_str());
     }
