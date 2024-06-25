@@ -15,6 +15,33 @@ See the Mulan PSL v2 for more details. */
 #include "index/ix.h"
 #include "system/sm.h"
 
+// class DeleteExecutor : public AbstractExecutor {
+//    private:
+//     TabMeta tab_;                   // 表的元数据
+//     std::vector<Condition> conds_;  // delete的条件
+//     RmFileHandle *fh_;              // 表的数据文件句柄
+//     std::vector<Rid> rids_;         // 需要删除的记录的位置
+//     std::string tab_name_;          // 表名称
+//     SmManager *sm_manager_;
+
+//    public:
+//     DeleteExecutor(SmManager *sm_manager, const std::string &tab_name, std::vector<Condition> conds,
+//                    std::vector<Rid> rids, Context *context) {
+//         sm_manager_ = sm_manager;
+//         tab_name_ = tab_name;
+//         tab_ = sm_manager_->db_.get_table(tab_name);
+//         fh_ = sm_manager_->fhs_.at(tab_name).get();
+//         conds_ = conds;
+//         rids_ = rids;
+//         context_ = context;
+//     }
+
+//     std::unique_ptr<RmRecord> Next() override {
+//         return nullptr;
+//     }
+
+//     Rid &rid() override { return _abstract_rid; }
+// };
 class DeleteExecutor : public AbstractExecutor {
    private:
     TabMeta tab_;                   // 表的元数据
@@ -37,8 +64,24 @@ class DeleteExecutor : public AbstractExecutor {
     }
 
     std::unique_ptr<RmRecord> Next() override {
-                    std::cout<<"$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$"<<std::endl;
+        for(auto& rid : rids_) {
+            char* data = new char[fh_->get_file_hdr().record_size];
+            fh_->get_record(rid,context_);
 
+            for(size_t i = 0; i < tab_.indexes.size(); ++i) {
+                auto& index = tab_.indexes[i];
+                auto ih = sm_manager_->ihs_.at(sm_manager_->get_ix_manager()->get_index_name(tab_name_, index.cols)).get();
+                char* key = new char[index.col_tot_len];
+                int offset = 0;
+                for(size_t i = 0; i < index.col_num; ++i) {
+                    memcpy(key + offset, data + index.cols[i].offset, index.cols[i].len);
+                    offset += index.cols[i].len;
+                }
+                ih->delete_entry(key, context_->txn_);
+            }
+
+            fh_->delete_record(rid, context_);
+        }
         return nullptr;
     }
 
