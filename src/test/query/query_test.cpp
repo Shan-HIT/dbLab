@@ -105,7 +105,10 @@ int main(int argc, char *argv[]) {
     int server_port = PORT_DEFAULT;
     int opt;
     std::string test_name = argv[1];
-    
+    // test_name = "../src/test/query/query_sql/basic_query_test2.sql";
+    // std::cout<<"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"<<test_name<<std::endl;
+    // std::cout<<"test_name: "<<test_name<<std::endl;
+    // std::cout<<"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"<<test_name<<std::endl;
 
     while ((opt = getopt(argc, argv, "s:h:p:")) > 0) {
         switch (opt) {

@@ -143,18 +143,28 @@ void QlManager::select_from(std::unique_ptr<AbstractExecutor> executorTreeRoot, 
     rec_printer.print_separator(context);
     // print header into file
     std::fstream outfile;
+    std::cout << "啊啊啊啊啊啊啊啊啊啊" << std::endl;
+
     outfile.open("output.txt", std::ios::out | std::ios::app);
     outfile << "|";
     for(int i = 0; i < captions.size(); ++i) {
         outfile << " " << captions[i] << " |";
     }
     outfile << "\n";
+    std::cout << "噢噢噢噢噢噢噢噢" << std::endl;
 
     // Print records
     size_t num_rec = 0;
     // 执行query_plan
+    std::cout << "呃呃呃呃呃呃呃呃呃呃" << std::endl;
     for (executorTreeRoot->beginTuple(); !executorTreeRoot->is_end(); executorTreeRoot->nextTuple()) {
+        //打印取到的元组
+        std::cout << "进入打印流程x" << std::endl;
+        std::cout << "Tuple: " << num_rec << std::endl;
+        std::cout << "Tuple: " << num_rec << std::endl;
         auto Tuple = executorTreeRoot->Next();
+        std::cout << "Tuple: " << Tuple.get() << std::endl;
+        std::cout <<"-+-+-+-+-+-+-+-+-+-+-+-+-+"<< std::endl;
         std::vector<std::string> columns;
         for (auto &col : executorTreeRoot->cols()) {
             std::string col_str;
@@ -179,6 +189,7 @@ void QlManager::select_from(std::unique_ptr<AbstractExecutor> executorTreeRoot, 
         outfile << "\n";
         num_rec++;
     }
+    std::cout << "红红火火恍恍惚惚哈哈哈哈" << std::endl;
     outfile.close();
     // Print footer into buffer
     rec_printer.print_separator(context);

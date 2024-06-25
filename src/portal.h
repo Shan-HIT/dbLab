@@ -76,7 +76,7 @@ class Portal
                 {
                     std::unique_ptr<AbstractExecutor> scan= convert_plan_executor(x->subplan_, context);
                     std::vector<Rid> rids;
-                    for (scan->beginTuple(); !scan->is_end(); scan->nextTuple()) {
+                    for (scan->beginTuple(); !scan->is_end(); scan->nextTuple()) {//
                         rids.push_back(scan->rid());
                     }
                     std::unique_ptr<AbstractExecutor> root =std::make_unique<UpdateExecutor>(sm_manager_, 

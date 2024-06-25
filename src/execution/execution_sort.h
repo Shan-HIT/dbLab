@@ -42,6 +42,7 @@ class SortExecutor : public AbstractExecutor {
     }
 
     std::unique_ptr<RmRecord> Next() override {
+        
         return nullptr;
     }
 

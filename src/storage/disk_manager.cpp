@@ -35,7 +35,7 @@ void DiskManager::write_page(int fd, page_id_t page_no, const char *offset, int 
     int bytes_write = write(fd, offset, num_bytes);
     if (bytes_write != num_bytes) {
         throw InternalError("DiskManager::write_page Error");
-        }
+    }
 }
 
 /**
@@ -54,7 +54,7 @@ void DiskManager::read_page(int fd, page_id_t page_no, char *offset, int num_byt
     int bytes_read = read(fd, offset, num_bytes);
     if (bytes_read != num_bytes) {
         throw InternalError("DiskManager::read_page Error");
-        }
+    }
 }
 
 /**

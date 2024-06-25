@@ -136,7 +136,9 @@ void *client_handler(void *sock_fd) {
                     std::shared_ptr<Plan> plan = optimizer->plan_query(query, context);
                     // portal
                     std::shared_ptr<PortalStmt> portalStmt = portal->start(plan, context);
+                    
                     portal->run(portalStmt, ql_manager.get(), &txn_id, context);
+
                     portal->drop();
                 } catch (TransactionAbortException &e) {
                     // 事务需要回滚，需要把abort信息返回给客户端并写入output.txt文件中
@@ -244,7 +246,8 @@ void start_server() {
             std::cout << "Accept error!" << std::endl;
             continue;  // ignore current socket ,continue while loop.
         }
-        
+            std::cout << "xxxxxxxxxxxxxxxxxxxxxx" << std::endl;
+
         // 和客户端建立连接，并开启一个线程负责处理客户端请求
         if (pthread_create(&thread_id, nullptr, &client_handler, (void *)(&sockfd)) != 0) {
             std::cout << "Create thread fail!" << std::endl;
@@ -252,6 +255,7 @@ void start_server() {
         }
 
     }
+    std::cout << "xxxxxxxxxxxxxxxxxxxxxx" << std::endl;
 
     // Clear
     std::cout << " Try to close all client-connection.\n";
@@ -264,11 +268,16 @@ void start_server() {
 }
 
 int main(int argc, char **argv) {
-    if (argc != 2) {
-        // 需要指定数据库名称
-        std::cerr << "Usage: " << argv[0] << " <database>" << std::endl;
-        exit(1);
-    }
+    // if (argc != 2) {
+    //     // 需要指定数据库名称
+    //     std::cerr << "Usage: " << argv[0] << " <database>" << std::endl;
+    //     exit(1);
+    // }
+
+    // std::cout<<"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"<<std::endl;
+    // std::cout<<"argv[1] "<<argv[1]<<std::endl;
+    // std::cout<<"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"<<std::endl;
+    // argv[1] = "query_test_db";
 
     signal(SIGINT, sigint_handler);
     try {
