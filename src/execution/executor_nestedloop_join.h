@@ -55,13 +55,82 @@ class NestedLoopJoinExecutor : public AbstractExecutor {
         return "NestedLoopJoinExecutor";
     }
 
-    bool isSatisfy (std::unique_ptr<RmRecord> lrec, std::unique_ptr<RmRecord> rrec) {
+    // bool isConditionSatisfied (std::unique_ptr<RmRecord> lrec, std::unique_ptr<RmRecord> rrec) {
+    //     for (auto &cond : fed_conds_) { // 遍历所有的条件
+    //         if (cond.is_rhs_val) { // 如果右侧是值
+    //             for (auto &col : cols_) { // 遍历所有的字段
+    //                 if (col.name == cond.lhs_col.col_name) { // 找到左侧的字段
+    //                     Value lhs = toValue(*lrec, col); // 获取左侧的值
+    //                     if (!eval_conds(lhs, cond.rhs_val, cond.op)) { // 比较左右两侧的值
+    //                         return false;
+    //                     }
+    //                 }
+    //             }
+    //         } else { // 如果右侧是字段
+    //             Value lhs, rhs;
+    //             std::vector<ColMeta> left_cols = left_->cols();
+    //             std::vector<ColMeta> right_cols = right_->cols();
+    //             for (auto &col : left_cols) {
+    //                 if (col.name == cond.lhs_col.col_name) {
+    //                     lhs = toValue(*lrec, col);
+    //                 }
+    //             }
+    //             for (auto &col : right_cols) {
+    //                 if (col.name == cond.rhs_col.col_name) {
+    //                     rhs = toValue(*rrec, col);
+    //                 }
+    //             }
+    //             if (!eval_conds(lhs, rhs, cond.op)) {
+    //                 return false;
+    //             }
+    //         }
+    //     }
+    //     return true;
+    // }
+
+    // Value toValue(const RmRecord &rec, ColMeta &col) {
+    //     Value val;
+    //     switch (col.type) {
+    //         case TYPE_INT:
+    //             val.type = TYPE_INT;
+    //             val.int_val = *reinterpret_cast<int *>(rec.data + col.offset);
+    //             break;
+    //         case TYPE_FLOAT:
+    //             val.type = TYPE_FLOAT;
+    //             val.float_val = *reinterpret_cast<float *>(rec.data + col.offset);
+    //             break;
+    //         case TYPE_STRING:
+    //             val.type = TYPE_STRING;
+    //             val.str_val = std::string(rec.data + col.offset, col.len);
+    //             break;
+    //         default:
+    //             assert(false);
+    //     }
+    //     return val;
+    // }
+    bool isConditionSatisfied (std::unique_ptr<RmRecord> lrec, std::unique_ptr<RmRecord> rrec) {
         for (auto &cond : fed_conds_) { // 遍历所有的条件
             if (cond.is_rhs_val) { // 如果右侧是值
                 for (auto &col : cols_) { // 遍历所有的字段
                     if (col.name == cond.lhs_col.col_name) { // 找到左侧的字段
-                        Value lhs = toValue(*lrec, col); // 获取左侧的值
-                        if (!compareBtw(lhs, cond.rhs_val, cond.op)) { // 比较左右两侧的值
+                        Value lhs;
+                        switch (col.type) {
+                            case TYPE_INT:
+                                lhs.type = TYPE_INT;
+                                lhs.int_val = *reinterpret_cast<int *>(lrec->data + col.offset);
+                                break;
+                            case TYPE_FLOAT:
+                                lhs.type = TYPE_FLOAT;
+                                lhs.float_val = *reinterpret_cast<float *>(lrec->data + col.offset);
+                                break;
+                            case TYPE_STRING:
+                                lhs.type = TYPE_STRING;
+                                lhs.str_val = std::string(lrec->data + col.offset, col.len);
+                                break;
+                            default:
+                                assert(false);
+                        }
+                        if (!eval_conds(lhs, cond.rhs_val, cond.op)) { // 比较左右两侧的值
                             return false;
                         }
                     }
@@ -72,15 +141,45 @@ class NestedLoopJoinExecutor : public AbstractExecutor {
                 std::vector<ColMeta> right_cols = right_->cols();
                 for (auto &col : left_cols) {
                     if (col.name == cond.lhs_col.col_name) {
-                        lhs = toValue(*lrec, col);
+                        switch (col.type) {
+                            case TYPE_INT:
+                                lhs.type = TYPE_INT;
+                                lhs.int_val = *reinterpret_cast<int *>(lrec->data + col.offset);
+                                break;
+                            case TYPE_FLOAT:
+                                lhs.type = TYPE_FLOAT;
+                                lhs.float_val = *reinterpret_cast<float *>(lrec->data + col.offset);
+                                break;
+                            case TYPE_STRING:
+                                lhs.type = TYPE_STRING;
+                                lhs.str_val = std::string(lrec->data + col.offset, col.len);
+                                break;
+                            default:
+                                assert(false);
+                        }
                     }
                 }
                 for (auto &col : right_cols) {
                     if (col.name == cond.rhs_col.col_name) {
-                        rhs = toValue(*rrec, col);
+                        switch (col.type) {
+                            case TYPE_INT:
+                                rhs.type = TYPE_INT;
+                                rhs.int_val = *reinterpret_cast<int *>(rrec->data + col.offset);
+                                break;
+                            case TYPE_FLOAT:
+                                rhs.type = TYPE_FLOAT;
+                                rhs.float_val = *reinterpret_cast<float *>(rrec->data + col.offset);
+                                break;
+                            case TYPE_STRING:
+                                rhs.type = TYPE_STRING;
+                                rhs.str_val = std::string(rrec->data + col.offset, col.len);
+                                break;
+                            default:
+                                assert(false);
+                        }
                     }
                 }
-                if (!compareBtw(lhs, rhs, cond.op)) {
+                if (!eval_conds(lhs, rhs, cond.op)) {
                     return false;
                 }
             }
@@ -88,28 +187,8 @@ class NestedLoopJoinExecutor : public AbstractExecutor {
         return true;
     }
 
-    Value toValue(const RmRecord &rec, ColMeta &col) {
-        Value val;
-        switch (col.type) {
-            case TYPE_INT:
-                val.type = TYPE_INT;
-                val.int_val = *reinterpret_cast<int *>(rec.data + col.offset);
-                break;
-            case TYPE_FLOAT:
-                val.type = TYPE_FLOAT;
-                val.float_val = *reinterpret_cast<float *>(rec.data + col.offset);
-                break;
-            case TYPE_STRING:
-                val.type = TYPE_STRING;
-                val.str_val = std::string(rec.data + col.offset, col.len);
-                break;
-            default:
-                assert(false);
-        }
-        return val;
-    }
 
-    bool compareBtw(const Value &lhs, const Value &rhs, CompOp op) {
+    bool eval_conds(const Value &lhs, const Value &rhs, CompOp op) {
         switch (lhs.type) {
             case TYPE_INT:
                 switch (op) {
@@ -187,7 +266,7 @@ class NestedLoopJoinExecutor : public AbstractExecutor {
             } else {
                 right_->nextTuple();
             }
-            if (isSatisfy(left_->Next(), right_->Next())) { // 如果满足条件
+            if (isConditionSatisfied(left_->Next(), right_->Next())) { // 如果满足条件
                 return;
             }
         }

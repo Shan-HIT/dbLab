@@ -69,7 +69,7 @@ Rucbase查询执行模块采用的是火山模型(Volcano Model),你可以通过
 
 ```bash
 cd src/test/query
-python3 query_unit_test.py basic_query_test2.sql # 25分
+python3 query_unit_test.py basic_query_test5.sql # 25分
 python query_unit_test.py basic_query_test{i}.sql  # replace {i} with the desired test file index
 ```
 
