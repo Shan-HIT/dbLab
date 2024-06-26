@@ -54,60 +54,6 @@ class NestedLoopJoinExecutor : public AbstractExecutor {
     std::string getType() override {
         return "NestedLoopJoinExecutor";
     }
-
-    // bool isConditionSatisfied (std::unique_ptr<RmRecord> lrec, std::unique_ptr<RmRecord> rrec) {
-    //     for (auto &cond : fed_conds_) { // 遍历所有的条件
-    //         if (cond.is_rhs_val) { // 如果右侧是值
-    //             for (auto &col : cols_) { // 遍历所有的字段
-    //                 if (col.name == cond.lhs_col.col_name) { // 找到左侧的字段
-    //                     Value lhs = toValue(*lrec, col); // 获取左侧的值
-    //                     if (!eval_conds(lhs, cond.rhs_val, cond.op)) { // 比较左右两侧的值
-    //                         return false;
-    //                     }
-    //                 }
-    //             }
-    //         } else { // 如果右侧是字段
-    //             Value lhs, rhs;
-    //             std::vector<ColMeta> left_cols = left_->cols();
-    //             std::vector<ColMeta> right_cols = right_->cols();
-    //             for (auto &col : left_cols) {
-    //                 if (col.name == cond.lhs_col.col_name) {
-    //                     lhs = toValue(*lrec, col);
-    //                 }
-    //             }
-    //             for (auto &col : right_cols) {
-    //                 if (col.name == cond.rhs_col.col_name) {
-    //                     rhs = toValue(*rrec, col);
-    //                 }
-    //             }
-    //             if (!eval_conds(lhs, rhs, cond.op)) {
-    //                 return false;
-    //             }
-    //         }
-    //     }
-    //     return true;
-    // }
-
-    // Value toValue(const RmRecord &rec, ColMeta &col) {
-    //     Value val;
-    //     switch (col.type) {
-    //         case TYPE_INT:
-    //             val.type = TYPE_INT;
-    //             val.int_val = *reinterpret_cast<int *>(rec.data + col.offset);
-    //             break;
-    //         case TYPE_FLOAT:
-    //             val.type = TYPE_FLOAT;
-    //             val.float_val = *reinterpret_cast<float *>(rec.data + col.offset);
-    //             break;
-    //         case TYPE_STRING:
-    //             val.type = TYPE_STRING;
-    //             val.str_val = std::string(rec.data + col.offset, col.len);
-    //             break;
-    //         default:
-    //             assert(false);
-    //     }
-    //     return val;
-    // }
     bool isConditionSatisfied (std::unique_ptr<RmRecord> lrec, std::unique_ptr<RmRecord> rrec) {
         for (auto &cond : fed_conds_) { // 遍历所有的条件
             if (cond.is_rhs_val) { // 如果右侧是值
