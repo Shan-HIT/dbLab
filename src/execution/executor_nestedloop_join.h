@@ -23,7 +23,7 @@ class NestedLoopJoinExecutor : public AbstractExecutor {
     std::vector<ColMeta> cols_;                 // join后获得的记录的字段
 
     std::vector<Condition> fed_conds_;          // join条件
-    bool isend;
+    bool isend;                                 // 是否结束
 
    public:
     NestedLoopJoinExecutor(std::unique_ptr<AbstractExecutor> left, std::unique_ptr<AbstractExecutor> right, 
@@ -43,18 +43,174 @@ class NestedLoopJoinExecutor : public AbstractExecutor {
 
     }
 
-    void beginTuple() override {
+    const std::vector<ColMeta> &cols() const override {
+        return cols_;
+    };
 
+    size_t tupleLen() const override {
+        return len_;
+    }
+
+    std::string getType() override {
+        return "NestedLoopJoinExecutor";
+    }
+
+    bool isSatisfy (std::unique_ptr<RmRecord> lrec, std::unique_ptr<RmRecord> rrec) {
+        for (auto &cond : fed_conds_) { // 遍历所有的条件
+            if (cond.is_rhs_val) { // 如果右侧是值
+                for (auto &col : cols_) { // 遍历所有的字段
+                    if (col.name == cond.lhs_col.col_name) { // 找到左侧的字段
+                        Value lhs = toValue(*lrec, col); // 获取左侧的值
+                        if (!compareBtw(lhs, cond.rhs_val, cond.op)) { // 比较左右两侧的值
+                            return false;
+                        }
+                    }
+                }
+            } else { // 如果右侧是字段
+                Value lhs, rhs;
+                std::vector<ColMeta> left_cols = left_->cols();
+                std::vector<ColMeta> right_cols = right_->cols();
+                for (auto &col : left_cols) {
+                    if (col.name == cond.lhs_col.col_name) {
+                        lhs = toValue(*lrec, col);
+                    }
+                }
+                for (auto &col : right_cols) {
+                    if (col.name == cond.rhs_col.col_name) {
+                        rhs = toValue(*rrec, col);
+                    }
+                }
+                if (!compareBtw(lhs, rhs, cond.op)) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    Value toValue(const RmRecord &rec, ColMeta &col) {
+        Value val;
+        switch (col.type) {
+            case TYPE_INT:
+                val.type = TYPE_INT;
+                val.int_val = *reinterpret_cast<int *>(rec.data + col.offset);
+                break;
+            case TYPE_FLOAT:
+                val.type = TYPE_FLOAT;
+                val.float_val = *reinterpret_cast<float *>(rec.data + col.offset);
+                break;
+            case TYPE_STRING:
+                val.type = TYPE_STRING;
+                val.str_val = std::string(rec.data + col.offset, col.len);
+                break;
+            default:
+                assert(false);
+        }
+        return val;
+    }
+
+    bool compareBtw(const Value &lhs, const Value &rhs, CompOp op) {
+        switch (lhs.type) {
+            case TYPE_INT:
+                switch (op) {
+                    case OP_EQ:
+                        return lhs.int_val == rhs.int_val;
+                    case OP_LT:
+                        return lhs.int_val < rhs.int_val;
+                    case OP_GT:
+                        return lhs.int_val > rhs.int_val;
+                    case OP_LE:
+                        return lhs.int_val <= rhs.int_val;
+                    case OP_GE:
+                        return lhs.int_val >= rhs.int_val;
+                    case OP_NE:
+                        return lhs.int_val != rhs.int_val;
+                    default:
+                        assert(false);
+                }
+            case TYPE_FLOAT:
+                switch (op) {
+                    case OP_EQ:
+                        return lhs.float_val == rhs.float_val;
+                    case OP_LT:
+                        return lhs.float_val < rhs.float_val;
+                    case OP_GT:
+                        return lhs.float_val > rhs.float_val;
+                    case OP_LE:
+                        return lhs.float_val <= rhs.float_val;
+                    case OP_GE:
+                        return lhs.float_val >= rhs.float_val;
+                    case OP_NE:
+                        return lhs.float_val != rhs.float_val;
+                    default:
+                        assert(false);
+                }
+            case TYPE_STRING:
+                switch (op) {
+                    case OP_EQ:
+                        return lhs.str_val == rhs.str_val;
+                    case OP_LT:
+                        return lhs.str_val < rhs.str_val;
+                    case OP_GT:
+                        return lhs.str_val > rhs.str_val;
+                    case OP_LE:
+                        return lhs.str_val <= rhs.str_val;
+                    case OP_GE:
+                        return lhs.str_val >= rhs.str_val;
+                    case OP_NE:
+                        return lhs.str_val != rhs.str_val;
+                    default:
+                        assert(false);
+                }
+            default:
+                assert(false);
+        }
+    }
+
+    void beginTuple() override {
+        left_->beginTuple();
+        right_->beginTuple();
     }
 
     void nextTuple() override {
-        
+        if (isend) {
+            return;
+        }
+        while (true) { // 一直循环直到找到满足条件的元组
+            if (right_->is_end()) { 
+                if (left_->is_end()) { // 如果左右两侧都结束了
+                    isend = true;
+                    return;
+                }
+                left_->nextTuple();
+                right_->beginTuple();
+            } else {
+                right_->nextTuple();
+            }
+            if (isSatisfy(left_->Next(), right_->Next())) { // 如果满足条件
+                return;
+            }
+        }
+    }
+
+    bool is_end() const override {
+        return isend;
+    }
+
+    void makeConnect(RmRecord &rec, RmRecord &left_rec, RmRecord &right_rec) {
+        memcpy(rec.data, left_rec.data, left_->tupleLen());
+        memcpy(rec.data + left_->tupleLen(), right_rec.data, right_->tupleLen());
     }
 
     std::unique_ptr<RmRecord> Next() override {
-                    std::cout<<"$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$"<<std::endl;
-
-        return nullptr;
+        auto left_rec = left_->Next();
+        auto right_rec = right_->Next();
+        if (left_rec == nullptr || right_rec == nullptr) {
+            return nullptr;
+        }
+        auto rec = std::make_unique<RmRecord>(len_);
+        makeConnect(*rec, *left_rec, *right_rec);
+        return rec;
     }
 
     Rid &rid() override { return _abstract_rid; }
